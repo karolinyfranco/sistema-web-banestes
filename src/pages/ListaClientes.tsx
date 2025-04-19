@@ -2,10 +2,14 @@ import { useEffect, useState } from "react";
 import { Cliente } from "../types/Cliente";
 import { fetchCSV } from "../services/fetchCSV";
 import { parseCSV } from "../utils/parseCSV";
+import { Link } from "react-router-dom";
+import MainLayout from "../components/layouts/MainLayout";
+import { Button, Col, Form, Pagination, Row, Table } from "react-bootstrap";
 
 export function ListaClientes() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [busca, setBusca] = useState("");
+  const [textoDigitado, setTextoDigitado] = useState("");
   const [paginaAtual, setPaginaAtual] = useState(1);
   const itensPorPagina = 10;
 
@@ -31,11 +35,6 @@ export function ListaClientes() {
           codigoAgencia: parseInt(row[11]),
         }));
 
-        console.log(
-          "Clientes carregados:",
-          clientesParseados.map((c) => c.nome)
-        );
-
         setClientes(clientesParseados);
       } catch (error) {
         console.error("Erro ao carregar clientes:", error);
@@ -46,7 +45,7 @@ export function ListaClientes() {
   }, []);
 
   useEffect(() => {
-    setPaginaAtual(1); // Voltar para a primeira página quando buscar algo
+    setPaginaAtual(1);
   }, [busca]);
 
   const clientesFiltrados = clientes.filter(
@@ -61,51 +60,77 @@ export function ListaClientes() {
   const totalPaginas = Math.ceil(clientesFiltrados.length / itensPorPagina);
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <h1>Lista de Clientes</h1>
+    <MainLayout>
+      <Row className="m-4 ">
+        <Col>
+          <h1>Lista de Clientes</h1>
+        </Col>
+      </Row>
 
-      <input
-        type="text"
-        placeholder="Buscar por nome ou CPF/CNPJ"
-        value={busca}
-        onChange={(e) => setBusca(e.target.value)}
-        style={{
-          marginBottom: "1rem",
-          padding: "0.5rem",
-          width: "100%",
-          maxWidth: "400px",
-        }}
-      />
+      <Row className="mb-3">
+        <Col md={8}>
+          <Form.Control
+            type="text"
+            placeholder="Digite o nome ou CPF/CNPJ do cliente"
+            value={textoDigitado}
+            onChange={(e) => setTextoDigitado(e.target.value)} />
+        </Col>
+        <Col md={4}>
+          <Button
+            variant="primary"
+            className="w-100"
+            onClick={() => setBusca(textoDigitado)}>
+            Buscar
+          </Button>
+        </Col>
+      </Row>
 
-      <ul>
-        {clientesPaginados.map((cliente) => (
-          <li key={cliente.id}>
-            {cliente.nome} - {cliente.cpfCnpj}
-          </li>
-        ))}
-      </ul>
+      <Row className="mb-3">
+        <Col>
+          <Table striped bordered hover>
+            <thead>
+              <tr>
+                <th>Id</th>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>CPF/CNPJ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {clientesPaginados.map((cliente) => (
+                <tr key={cliente.id}>
+                  <td>{cliente.id}</td>
+                  <td>
+                    <Link to={`/cliente/${cliente.id}`}>
+                      {cliente.nome}
+                    </Link>
+                  </td>
+                  <td>{cliente.email}</td>
+                  <td>{cliente.cpfCnpj}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </Col>
+      </Row>
 
-      <div style={{ marginTop: "1rem" }}>
-        <button
+      <Pagination className="justify-content-center">
+        <Pagination.Prev
           onClick={() => setPaginaAtual((p) => Math.max(p - 1, 1))}
-          disabled={paginaAtual === 1}
-          style={{ marginRight: "0.5rem" }}
-        >
+          disabled={paginaAtual === 1}>
           Anterior
-        </button>
+        </Pagination.Prev>
 
-        <span>
+        <Pagination.Item active>
           Página {paginaAtual} de {totalPaginas}
-        </span>
+        </Pagination.Item>
 
-        <button
+        <Pagination.Next
           onClick={() => setPaginaAtual((p) => Math.min(p + 1, totalPaginas))}
-          disabled={paginaAtual === totalPaginas}
-          style={{ marginLeft: "0.5rem" }}
-        >
+          disabled={paginaAtual === totalPaginas}>
           Próxima
-        </button>
-      </div>
-    </div>
+        </Pagination.Next>
+      </Pagination>
+    </MainLayout>
   );
 }
