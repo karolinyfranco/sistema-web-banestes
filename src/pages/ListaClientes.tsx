@@ -28,10 +28,11 @@ export function ListaClientes() {
   ];
   const itensPorPagina = 10;
 
+  // Alterna a seleção de colunas (adiciona ou remove do array)
   function alternarColuna(chave: keyof Cliente | string) {
     setColunasSelecionadas((prev) => {
       if (prev.includes(chave)) {
-        if (prev.length === 1) return prev;
+        if (prev.length === 1) return prev; // Impede remover a última coluna selecionada
         return prev.filter((c) => c !== chave);
       } else {
         return [...prev, chave];
@@ -39,6 +40,7 @@ export function ListaClientes() {
     });
   }
 
+  // Renderiza os checkboxes para seleção de colunas
   const renderizarOpcoesColunas = () => (
     <>
       {opcoesColunas.map((opcao) => (
@@ -60,6 +62,7 @@ export function ListaClientes() {
           "https://docs.google.com/spreadsheets/d/1PBN_HQOi5ZpKDd63mouxttFvvCwtmY97Tb5if5_cdBA/gviz/tq?tqx=out:csv&sheet=clientes"
         );
 
+        // Parsing manual dos campos CSV para os tipos corretos do Cliente
         const clientesParseados = parseCSV<Cliente>(csv, (row) => ({
           id: row[0],
           cpfCnpj: row[1].replace(/^"|"$/g, ""),
@@ -84,10 +87,12 @@ export function ListaClientes() {
     carregarClientes();
   }, []);
 
+  // Quando a busca muda, sempre volta para a página 1
   useEffect(() => {
     setPaginaAtual(1);
   }, [busca]);
 
+  // Filtra clientes conforme o texto de busca
   const clientesFiltrados = clientes.filter(
     (cliente) =>
       cliente.nome.toLowerCase().includes(busca.toLowerCase()) ||
@@ -107,12 +112,13 @@ export function ListaClientes() {
         </Col>
       </Row>
 
+      {/* Botão de seleção de colunas (Desktop) */}
       <Row>
         <Col>
           <Dropdown className="selecionar-colunas">
             <Dropdown.Toggle variant="secondary" id="dropdown-colunas" className="d-none d-md-inline">
               <Image
-                alt="Logotipo do Banestes"
+                alt="Configurações para as colunas da tabela"
                 src={gear}
                 width="25"
                 height="25"
@@ -128,12 +134,13 @@ export function ListaClientes() {
         </Col>
       </Row>
 
+      {/* Botão de seleção de colunas (Mobile) */}
       <Row className="mb-3">
         <Col xs="3">
           <Dropdown className="selecionar-colunas">
             <Dropdown.Toggle variant="secondary" id="dropdown-colunas-mobile" className="d-inline d-md-none p-2">
               <Image
-                alt="Logotipo do Banestes"
+                alt="Configurações para as colunas da tabela"
                 src={gear}
                 width="25"
                 height="25"
@@ -148,6 +155,7 @@ export function ListaClientes() {
         </Col>
       </Row>
 
+      {/* Campo de busca e botão */}
       <Row className="mb-3 w-100 d-flex justify-content-center">
         <Col className="m-1" md="8">
           <Form.Control
@@ -166,6 +174,7 @@ export function ListaClientes() {
         </Col>
       </Row>
 
+      {/* Tabela de clientes */}
       <Row className="mb-3">
         <Col>
           <Table striped bordered hover responsive>
@@ -217,6 +226,7 @@ export function ListaClientes() {
         </Col>
       </Row>
 
+      {/* Paginação */}
       <Row>
         <Col>
           <Pagination className="mb-5 d-flex justify-content-center">

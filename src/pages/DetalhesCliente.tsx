@@ -17,7 +17,11 @@ export function DetalhesCliente() {
   useEffect(() => {
     async function carregarDados() {
       try {
-        const csvClientes = await fetchCSV("https://docs.google.com/spreadsheets/d/1PBN_HQOi5ZpKDd63mouxttFvvCwtmY97Tb5if5_cdBA/gviz/tq?tqx=out:csv&sheet=clientes");
+        const csvClientes = await fetchCSV(
+          "https://docs.google.com/spreadsheets/d/1PBN_HQOi5ZpKDd63mouxttFvvCwtmY97Tb5if5_cdBA/gviz/tq?tqx=out:csv&sheet=clientes"
+        );
+
+        // Parsing manual dos campos CSV para os tipos corretos do Cliente
         const todosClientes = parseCSV<Cliente>(csvClientes, (row) => ({
           id: row[0],
           cpfCnpj: row[1].replace(/^"|"$/g, ""),
@@ -38,7 +42,11 @@ export function DetalhesCliente() {
 
         setCliente(clienteEncontrado);
 
-        const csvContas = await fetchCSV("https://docs.google.com/spreadsheets/d/1PBN_HQOi5ZpKDd63mouxttFvvCwtmY97Tb5if5_cdBA/gviz/tq?tqx=out:csv&sheet=contas");
+        const csvContas = await fetchCSV(
+          "https://docs.google.com/spreadsheets/d/1PBN_HQOi5ZpKDd63mouxttFvvCwtmY97Tb5if5_cdBA/gviz/tq?tqx=out:csv&sheet=contas"
+        );
+
+        // Parsing manual dos campos CSV para os dados das contas
         const contasParseadas = parseCSV<Conta>(csvContas, (row) => ({
           id: row[0],
           cpfCnpjCliente: row[1].replace(/^"|"$/g, ""),
@@ -53,7 +61,11 @@ export function DetalhesCliente() {
         );
         setContas(contasDoCliente);
 
-        const csvAgencias = await fetchCSV("https://docs.google.com/spreadsheets/d/1PBN_HQOi5ZpKDd63mouxttFvvCwtmY97Tb5if5_cdBA/gviz/tq?tqx=out:csv&sheet=agencias");
+        const csvAgencias = await fetchCSV(
+          "https://docs.google.com/spreadsheets/d/1PBN_HQOi5ZpKDd63mouxttFvvCwtmY97Tb5if5_cdBA/gviz/tq?tqx=out:csv&sheet=agencias"
+        );
+
+        // Parsing manual dos campos CSV para os dados das agências
         const agenciasParseadas = parseCSV<Agencia>(csvAgencias, (row) => ({
           id: row[0],
           codigo: parseInt(row[1]),
@@ -73,6 +85,7 @@ export function DetalhesCliente() {
     carregarDados();
   }, [id]);
 
+  // Enquanto o cliente não for carregado, mostra um spinner de carregamento
   if (!cliente) return (
     <Container fluid className="d-flex justify-content-center">
       <Row>
@@ -83,6 +96,7 @@ export function DetalhesCliente() {
       </Row>
     </Container>);
 
+  // Quando o cliente já está carregado, renderiza os detalhes
   return (
     <MainLayout>
       <Row className="w-100 text-center mx-0">
@@ -90,6 +104,8 @@ export function DetalhesCliente() {
           <h1 className="m-4">Detalhes do Cliente</h1>
         </Col>
       </Row>
+
+      {/* Cartão de informações pessoais */}
       <Row>
         <Col>
           <Card className="mb-4">
@@ -112,6 +128,7 @@ export function DetalhesCliente() {
         </Col>
       </Row>
 
+      {/* Seção de contas do cliente */}
       <Row>
         <Col>
           <h2 className="m-4 w-100 text-center mx-0">Contas</h2>
@@ -136,7 +153,8 @@ export function DetalhesCliente() {
           </Card>
         </Col>
       </Row>
-
+      
+      {/* Seção de agência associada */}
       <Row>
         <Col>
           <h2 className="m-4 w-100 text-center mx-0">Agência</h2>
