@@ -1,7 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import { ListaClientes } from "./pages/ListaClientes";
 import { DetalhesCliente } from "./pages/DetalhesCliente";
-
 import './bootstrap.css';
 
 function App() {

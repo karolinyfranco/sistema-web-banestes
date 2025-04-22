@@ -1,4 +1,4 @@
-import Papa from 'papaparse';
+import Papa from "papaparse";
 
 export function parseCSV<T>(csvText: string, mapFn: (row: string[]) => T): T[] {
   const parsed = Papa.parse<string[]>(csvText, { header: false });

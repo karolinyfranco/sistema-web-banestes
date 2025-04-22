@@ -5,8 +5,8 @@ import { Conta } from "../types/Conta";
 import { Agencia } from "../types/Agencia";
 import { fetchCSV } from "../services/fetchCSV";
 import { parseCSV } from "../utils/parseCSV";
-import MainLayout from "../components/layouts/MainLayout";
-import { Col, Row, Table } from "react-bootstrap";
+import MainLayout from "../components/MainLayout";
+import { Card, Col, Container, ListGroup, Row, Spinner } from "react-bootstrap";
 
 export function DetalhesCliente() {
   const { id } = useParams<{ id: string }>();
@@ -17,44 +17,35 @@ export function DetalhesCliente() {
   useEffect(() => {
     async function carregarDados() {
       try {
-        // Buscar clientes
         const csvClientes = await fetchCSV("https://docs.google.com/spreadsheets/d/1PBN_HQOi5ZpKDd63mouxttFvvCwtmY97Tb5if5_cdBA/gviz/tq?tqx=out:csv&sheet=clientes");
         const todosClientes = parseCSV<Cliente>(csvClientes, (row) => ({
           id: row[0],
-          cpfCnpj: row[1].replace(/^"|"$/g, "").replace(/\D/g, ""),
-          rg: row[2]?.replace(/^"|"$/g, "") || undefined,
-          dataNascimento: new Date(row[3]?.replace(/^"|"$/g, "")),
+          cpfCnpj: row[1].replace(/^"|"$/g, ""),
+          rg: row[2] || undefined,
+          dataNascimento: new Date(row[3]),
           nome: row[4].replace(/^"|"$/g, ""),
           nomeSocial: row[5] ? row[5].replace(/^"|"$/g, "") : undefined,
-          email: row[6]?.replace(/^"|"$/g, ""),
-          endereco: row[7]?.replace(/^"|"$/g, ""),
-          rendaAnual: parseFloat(
-            row[8]?.replace(/^"|"$/g, "").replace("R$ ", "").replace(".", "").replace(",", ".") || "0"
-          ),
-          patrimonio: parseFloat(
-            row[9]?.replace(/^"|"$/g, "").replace(",", ".") || "0"
-          ),
-          estadoCivil: row[10]?.replace(/^"|"$/g, "") as Cliente["estadoCivil"],
-          codigoAgencia: Number.isNaN(parseInt(row[11])) ? 0 : parseInt(row[11]?.replace(/^"|"$/g, "")),
+          email: row[6],
+          endereco: row[7],
+          rendaAnual: parseFloat(row[8]),
+          patrimonio: parseFloat(row[9]),
+          estadoCivil: row[10] as Cliente["estadoCivil"],
+          codigoAgencia: parseInt(row[11]),
         }));
-
-        console.log("IDs disponíveis:", todosClientes.map(c => c.id));
-        console.log("ID procurado:", id);
 
         const clienteEncontrado = todosClientes.find((c) => c.id === id);
         if (!clienteEncontrado) return;
 
         setCliente(clienteEncontrado);
 
-        // Buscar contas
         const csvContas = await fetchCSV("https://docs.google.com/spreadsheets/d/1PBN_HQOi5ZpKDd63mouxttFvvCwtmY97Tb5if5_cdBA/gviz/tq?tqx=out:csv&sheet=contas");
         const contasParseadas = parseCSV<Conta>(csvContas, (row) => ({
           id: row[0],
           cpfCnpjCliente: row[1].replace(/^"|"$/g, ""),
           tipo: row[2] as Conta["tipo"],
-          saldo: parseFloat(row[3].replace(/^"|"$/g, "")),
-          limiteCredito: parseFloat(row[4].replace(/^"|"$/g, "")),
-          creditoDisponivel: parseFloat(row[5].replace(/^"|"$/g, "")),
+          saldo: parseFloat(row[3]),
+          limiteCredito: parseFloat(row[4]),
+          creditoDisponivel: parseFloat(row[5]),
         }));
 
         const contasDoCliente = contasParseadas.filter(
@@ -62,11 +53,10 @@ export function DetalhesCliente() {
         );
         setContas(contasDoCliente);
 
-        // Buscar agência
         const csvAgencias = await fetchCSV("https://docs.google.com/spreadsheets/d/1PBN_HQOi5ZpKDd63mouxttFvvCwtmY97Tb5if5_cdBA/gviz/tq?tqx=out:csv&sheet=agencias");
         const agenciasParseadas = parseCSV<Agencia>(csvAgencias, (row) => ({
           id: row[0],
-          codigo: parseInt(row[1].replace(/^"|"$/g, "") || "0"),
+          codigo: parseInt(row[1]),
           nome: row[2],
           endereco: row[3],
         }));
@@ -83,120 +73,91 @@ export function DetalhesCliente() {
     carregarDados();
   }, [id]);
 
-  if (!cliente) return <p>Carregando cliente...</p>;
+  if (!cliente) return (
+    <Container fluid className="d-flex justify-content-center">
+      <Row>
+        <Col>
+          <Spinner animation="border" role="status" variant="dark" />
+          <span>Carregando cliente...</span>
+        </Col>
+      </Row>
+    </Container>);
 
   return (
     <MainLayout>
+      <Row className="w-100 text-center mx-0">
+        <Col>
+          <h1 className="m-4">Detalhes do Cliente</h1>
+        </Col>
+      </Row>
       <Row>
         <Col>
-          <h1>Detalhes do Cliente</h1>
-        </Col>
-
-        <Col>
-          <Table striped bordered hover>
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>CPF/CNPJ</th>
-                <th>RG</th>
-                <th>Data de Nascimento</th>
-                <th>Email</th>
-                <th>Endereço</th>
-                <th>Renda Anual</th>
-                <th>Patrimônio</th>
-                <th>Estado Civil</th>
-                <th>Código Agência</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr key={cliente.id}>
-                <td>{cliente.nome}</td>
-                <td>{cliente.cpfCnpj}</td>
-                <td>{cliente.rg}</td>
-                <td>{cliente.dataNascimento.toLocaleDateString()}</td>
-                <td>{cliente.email}</td>
-                <td>{cliente.endereco}</td>
-                <td>R$ {cliente.rendaAnual.toFixed(2)}</td>
-                <td>R$ {cliente.patrimonio.toFixed(2)}</td>
-                <td>{cliente.estadoCivil}</td>
-                <td>{cliente.codigoAgencia}</td>
-              </tr>
-            </tbody>
-          </Table>
+          <Card className="mb-4">
+            <Card.Header>Informações do Cliente</Card.Header>
+            <Card.Body>
+              <ListGroup className="list-group-flush">
+                <ListGroup.Item><strong>Nome:</strong> {cliente.nome}</ListGroup.Item>
+                <ListGroup.Item><strong>CPF/CNPJ:</strong> {cliente.cpfCnpj}</ListGroup.Item>
+                <ListGroup.Item><strong>RG:</strong> {cliente.rg || '-'}</ListGroup.Item>
+                <ListGroup.Item><strong>Data de Nascimento:</strong> {cliente.dataNascimento ? new Date(cliente.dataNascimento).toLocaleDateString() : '-'}</ListGroup.Item>
+                <ListGroup.Item><strong>Email:</strong> {cliente.email}</ListGroup.Item>
+                <ListGroup.Item><strong>Endereço:</strong> {cliente.endereco}</ListGroup.Item>
+                <ListGroup.Item><strong>Estado Civil:</strong> {cliente.estadoCivil}</ListGroup.Item>
+                <ListGroup.Item><strong>Renda Anual:</strong> R$ {cliente.rendaAnual.toFixed(2)}</ListGroup.Item>
+                <ListGroup.Item><strong>Patrimônio:</strong> R$ {cliente.patrimonio.toFixed(2)}</ListGroup.Item>
+                <ListGroup.Item><strong>Código Agência:</strong> {cliente.codigoAgencia}</ListGroup.Item>
+              </ListGroup>
+            </Card.Body>
+          </Card>
         </Col>
       </Row>
 
       <Row>
         <Col>
-          <h2>Contas</h2>
-        </Col>
-
-        <Col>
-          <Table striped bordered hover>
-            {contas.length > 0 ? (
-              <>
-                <thead>
-                  <tr>
-                    <th>Tipo</th>
-                    <th>Saldo</th>
-                    <th>Limite de Crédito</th>
-                    <th>Crédito Disponível</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {contas.map((conta) => (
-                    <tr key={conta.id}>
-                      <td>{conta.tipo}</td>
-                      <td>R$ {conta.saldo.toFixed(2)}</td>
-                      <td>R$ {conta.limiteCredito.toFixed(2)}</td>
-                      <td>R$ {conta.creditoDisponivel.toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </>
-            ) : (
-              <tbody>
-                <tr>
-                  <td colSpan={4} className="text-center">Nenhuma conta encontrada.</td>
-                </tr>
-              </tbody>
-            )}
-          </Table>
+          <h2 className="m-4 w-100 text-center mx-0">Contas</h2>
+          <Card className="mb-4">
+            <Card.Header>Contas do Cliente</Card.Header>
+            <Card.Body>
+              {contas.length > 0 ? (
+                contas.map((conta) => (
+                  <div key={conta.id} className="mb-4 pb-2 border-bottom">
+                    <h5 className="text-capitalize">{conta.tipo}</h5>
+                    <ListGroup className="list-group-flush">
+                      <ListGroup.Item><strong>Saldo:</strong> R$ {conta.saldo.toFixed(2)}</ListGroup.Item>
+                      <ListGroup.Item><strong>Limite de Crédito:</strong> R$ {conta.limiteCredito.toFixed(2)}</ListGroup.Item>
+                      <ListGroup.Item><strong>Crédito Disponível:</strong> R$ {conta.creditoDisponivel.toFixed(2)}</ListGroup.Item>
+                    </ListGroup>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center">Nenhuma conta encontrada.</p>
+              )}
+            </Card.Body>
+          </Card>
         </Col>
       </Row>
 
       <Row>
         <Col>
-          <h2>Agência</h2>
-        </Col>
-
-        <Col>
-          <Table striped bordered hover>
-            {agencia ? (
-              <>
-                <thead>
-                  <tr>
-                    <th>Nome</th>
-                    <th>Código</th>
-                    <th>Endereço</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>{agencia.nome}</td>
-                    <td>{agencia.codigo}</td>
-                    <td>{agencia.endereco}</td>
-                  </tr>
-                </tbody>
-              </>
-            ) : (
-              <tbody>
-                <tr>
-                  <td colSpan={3} className="text-center">Agência não encontrada.</td>
-                </tr>
-              </tbody>
-            )}
-          </Table>
+          <h2 className="m-4 w-100 text-center mx-0">Agência</h2>
+          {agencia ? (
+            <Card className="mb-5">
+              <Card.Header>Dados da Agência</Card.Header>
+              <Card.Body>
+                <ListGroup className="list-group-flush">
+                  <ListGroup.Item><strong>Nome:</strong> {agencia.nome}</ListGroup.Item>
+                  <ListGroup.Item><strong>Código:</strong> {agencia.codigo}</ListGroup.Item>
+                  <ListGroup.Item><strong>Endereço:</strong> {agencia.endereco}</ListGroup.Item>
+                </ListGroup>
+              </Card.Body>
+            </Card>
+          ) : (
+            <Card className="mb-5">
+              <Card.Body className="text-center">
+                Agência não encontrada.
+              </Card.Body>
+            </Card>
+          )}
         </Col>
       </Row>
     </MainLayout>
