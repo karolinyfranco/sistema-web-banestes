@@ -209,7 +209,10 @@
 }
 
 body {
+  height: 100%;
   margin: 0;
+  display: flex;
+  flex-direction: column;
   font-family: var(--bs-body-font-family);
   font-size: var(--bs-body-font-size);
   font-weight: var(--bs-body-font-weight);
